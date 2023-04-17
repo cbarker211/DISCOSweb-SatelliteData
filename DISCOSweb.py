@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 NB: Ech request is limited to 30 results, and there is a maximum limit of requests in a certain timeframe (unknown).
 To solve this, the script makes multiple requests over different filters."""
 
+#Should add functionality for different request types. 
+#The server_request function should be as simple as possible with the params entered into the function.
+
 #Define the URL for the data, and the authorisation token (get a new token here if needed https://discosweb.esoc.esa.int/tokens).
 URL = 'https://discosweb.esoc.esa.int'
 token = 'IjNiYzUyZjNkLThmNzEtNDVkZC1hMTliLWNiNDgxODkyZjVmOCI.0yAE_9jpGAvf2lCadU85mWWMKkE'
