@@ -194,9 +194,57 @@ def propellant_per_year(start_year,end_year):
                         continue
         with open(filename, 'a') as f:
             f.write(f'{year},{fuel_mass},{oxidiser_mass},{solid_mass},{total_mass}\n') 
+
+def get_launch_info(filename, year):
+    full_launch_list = get_yearly_launches(year)
+    #full_launch_list = [full_launch_list[0]] 
+    for count, launch in enumerate(full_launch_list):
+        Cospar_Id = launch["attributes"]["cosparLaunchNo"]
+        launch_epoch = launch["attributes"]["epoch"]
+        launch_date = launch_epoch[:10]
+        launch_time = launch_epoch[10:]
+        #First identify the vehicle
+        while True:
+            response = server_request({},f'/launches/{launch["id"]}/site')
+            if response.ok:
+                doc = response.json()
+                latitude = doc['data']["attributes"]["latitude"]
+                longitude = doc['data']["attributes"]["longitude"]
+                site_name = doc['data']["attributes"]["name"]
+                site_name = site_name.replace(",","")
+                break
+            elif response.status_code == 400:
+                print("Client Error")
+                break
+            elif response.status_code == 429:
+                message = f"On launch {count} of {len(full_launch_list)} in {year}."
+                wait_time=(int(response.headers["X-Ratelimit-Reset"])-int(time.time()))+1
+                wait_function(message,wait_time)
+                continue
+            
+        while True:
+            response = server_request({},f'/launches/{launch["id"]}/vehicle')
+            if response.ok:
+                doc = response.json()
+                rocket_name = doc['data']["attributes"]["name"]
+                break
+            elif response.status_code == 400:
+                print("Client Error")
+                break
+            elif response.status_code == 429:
+                message = f"On launch {count} of {len(full_launch_list)} in {year}."
+                wait_time=(int(response.headers["X-Ratelimit-Reset"])-int(time.time()))+1
+                wait_function(message,wait_time)
+                continue
+            
+        with open(filename, 'a') as f:
+            f.write(f'{Cospar_Id},{launch_date},{launch_time},{latitude},{longitude},{site_name},{rocket_name},\n') 
          
 start_year = 2010
 end_year = 2023
 #launches_per_year(start_year,end_year)
 #payloads_launched_per_year(start_year,end_year)       
-propellant_per_year(start_year,end_year)
+#propellant_per_year(start_year,end_year)
+
+year = 2020
+get_launch_info('launch_info_{year}.txt',year)
